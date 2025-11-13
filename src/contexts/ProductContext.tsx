@@ -1,0 +1,192 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  oldPrice: number | null;
+  discount: number;
+  category: string;
+  image: string;
+  description: string;
+}
+
+interface ProductContextType {
+  products: Product[];
+  addProduct: (product: Omit<Product, 'id'>) => void;
+  updateProduct: (id: number, product: Omit<Product, 'id'>) => void;
+  deleteProduct: (id: number) => void;
+}
+
+const ProductContext = createContext<ProductContextType | undefined>(undefined);
+
+export const useProducts = () => {
+  const context = useContext(ProductContext);
+  if (!context) {
+    throw new Error('useProducts must be used within a ProductProvider');
+  }
+  return context;
+};
+
+const initialProducts: Product[] = [
+  {
+    id: 1,
+    name: "Camisa Formal Ejecutiva",
+    price: 45.99,
+    oldPrice: 65.99,
+    discount: 30,
+    category: "Camisas",
+    image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=500",
+    description: "Camisa formal de alta calidad, perfecta para eventos ejecutivos. Tela premium con acabados impecables."
+  },
+  {
+    id: 2,
+    name: "Pantalón de Vestir Clásico",
+    price: 55.99,
+    oldPrice: null,
+    discount: 0,
+    category: "Pantalones",
+    image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=500",
+    description: "Pantalón de vestir con corte clásico. Ideal para combinar con cualquier camisa formal."
+  },
+  {
+    id: 3,
+    name: "Vestido Casual Elegante",
+    price: 68.99,
+    oldPrice: 89.99,
+    discount: 23,
+    category: "Vestidos",
+    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500",
+    description: "Vestido versátil que combina elegancia y comodidad para cualquier ocasión."
+  },
+  {
+    id: 4,
+    name: "Chaqueta de Cuero Premium",
+    price: 125.99,
+    oldPrice: 179.99,
+    discount: 30,
+    category: "Chaquetas",
+    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500",
+    description: "Chaqueta de cuero genuino con diseño moderno y duradero. Una inversión en estilo."
+  },
+  {
+    id: 5,
+    name: "Blusa Casual Femenina",
+    price: 35.99,
+    oldPrice: null,
+    discount: 0,
+    category: "Blusas",
+    image: "https://images.unsplash.com/photo-1564257577100-9fd6fd2f8a69?w=500",
+    description: "Blusa ligera y cómoda, perfecta para el día a día con estilo."
+  },
+  {
+    id: 6,
+    name: "Jeans Modernos Slim Fit",
+    price: 48.99,
+    oldPrice: null,
+    discount: 0,
+    category: "Pantalones",
+    image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=500",
+    description: "Jeans de corte moderno con ajuste perfecto. Comodidad y estilo en una sola prenda."
+  },
+  {
+    id: 7,
+    name: "Camisa Casual a Cuadros",
+    price: 38.99,
+    oldPrice: 52.99,
+    discount: 26,
+    category: "Camisas",
+    image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500",
+    description: "Camisa casual con patrón de cuadros clásico. Perfecta para looks informales."
+  },
+  {
+    id: 8,
+    name: "Falda Plisada Elegante",
+    price: 42.99,
+    oldPrice: null,
+    discount: 0,
+    category: "Faldas",
+    image: "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=500",
+    description: "Falda plisada que aporta movimiento y elegancia a tu outfit."
+  },
+  {
+    id: 9,
+    name: "Suéter de Punto Premium",
+    price: 58.99,
+    oldPrice: 75.99,
+    discount: 22,
+    category: "Suéteres",
+    image: "https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=500",
+    description: "Suéter de punto fino, suave al tacto y perfecto para climas frescos."
+  },
+  {
+    id: 10,
+    name: "Blazer Ejecutivo Negro",
+    price: 95.99,
+    oldPrice: 135.99,
+    discount: 29,
+    category: "Chaquetas",
+    image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=500",
+    description: "Blazer negro versátil que nunca pasa de moda. Esencial en todo guardarropa."
+  },
+  {
+    id: 11,
+    name: "Polo Deportivo Premium",
+    price: 32.99,
+    oldPrice: null,
+    discount: 0,
+    category: "Camisas",
+    image: "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=500",
+    description: "Polo deportivo de tela transpirable. Comodidad para todo el día."
+  },
+  {
+    id: 12,
+    name: "Vestido de Noche Sofisticado",
+    price: 115.99,
+    oldPrice: 159.99,
+    discount: 28,
+    category: "Vestidos",
+    image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=500",
+    description: "Vestido de noche elegante y sofisticado para eventos especiales."
+  }
+];
+
+export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  // Load products from localStorage on mount
+  useEffect(() => {
+    const savedProducts = localStorage.getItem('rondalClothesProducts');
+    if (savedProducts) {
+      setProducts(JSON.parse(savedProducts));
+    } else {
+      setProducts(initialProducts);
+    }
+  }, []);
+
+  // Save products to localStorage whenever they change
+  useEffect(() => {
+    if (products.length > 0) {
+      localStorage.setItem('rondalClothesProducts', JSON.stringify(products));
+    }
+  }, [products]);
+
+  const addProduct = (product: Omit<Product, 'id'>) => {
+    const newId = Math.max(...products.map(p => p.id), 0) + 1;
+    setProducts([...products, { ...product, id: newId }]);
+  };
+
+  const updateProduct = (id: number, updatedProduct: Omit<Product, 'id'>) => {
+    setProducts(products.map(p => p.id === id ? { ...updatedProduct, id } : p));
+  };
+
+  const deleteProduct = (id: number) => {
+    setProducts(products.filter(p => p.id !== id));
+  };
+
+  return (
+    <ProductContext.Provider value={{ products, addProduct, updateProduct, deleteProduct }}>
+      {children}
+    </ProductContext.Provider>
+  );
+};
