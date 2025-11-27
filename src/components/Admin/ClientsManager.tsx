@@ -19,6 +19,7 @@ import autoTable from 'jspdf-autotable';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Toast } from '../ui/toast';
 import {
   Table,
   TableBody,
@@ -185,6 +186,7 @@ export default function ClientsManager() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedClient, setSelectedClient] = useState<typeof mockClients[0] | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const statusChips: { label: string; value: StatusFilter }[] = [
     { label: 'Todos los clientes', value: 'all' },
     { label: 'Activos', value: 'active' },
@@ -297,8 +299,8 @@ export default function ClientsManager() {
     // Guardar PDF
     doc.save(`clientes_rondal_clothes_${new Date().getTime()}.pdf`);
 
-    // Mostrar alerta de éxito
-    alert('✅ Reporte de clientes exportado correctamente');
+    // Mostrar toast de éxito
+    setToastMessage('Reporte de clientes exportado correctamente');
   };
 
   const handleExportClientDetail = (client: typeof mockClients[0]) => {
@@ -382,8 +384,8 @@ export default function ClientsManager() {
 
     doc.save(`cliente_${client.id}_${new Date().getTime()}.pdf`);
 
-    // Mostrar alerta de éxito
-    alert('✅ Detalle de cliente exportado correctamente');
+    // Mostrar toast de éxito
+    setToastMessage('Detalle de cliente exportado correctamente');
   };
 
   return (
@@ -741,6 +743,14 @@ export default function ClientsManager() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Toast de éxito */}
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          onClose={() => setToastMessage(null)}
+        />
+      )}
     </div>
   );
 }

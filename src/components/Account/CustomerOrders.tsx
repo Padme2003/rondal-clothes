@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Toast } from '../ui/toast';
 
 type StoredOrder = {
   orderNumber: string;
@@ -41,6 +42,7 @@ const formatDate = (dateString: string) =>
 export default function CustomerOrders() {
   const { isAuthenticated, user } = useAuth();
   const [invoiceOrder, setInvoiceOrder] = useState<StoredOrder | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: '/orders', message: 'Inicia sesión para ver tus compras' }} />;
   }
@@ -165,8 +167,8 @@ export default function CustomerOrders() {
 
     doc.save(`factura_${order.orderNumber}_${new Date().getTime()}.pdf`);
 
-    // Mostrar alerta de éxito
-    alert('✅ Factura descargada correctamente');
+    // Mostrar toast de éxito
+    setToastMessage('Factura descargada correctamente');
   };
 
   return (
@@ -363,6 +365,14 @@ export default function CustomerOrders() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast de éxito */}
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          onClose={() => setToastMessage(null)}
+        />
       )}
     </div>
   );

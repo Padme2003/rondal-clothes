@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Package, Eye, X, MapPin, Phone, Mail, Calendar, CreditCard, Truck, FileText, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Toast } from '../ui/toast';
 
 interface OrderItem {
   id: number;
@@ -29,6 +30,7 @@ interface Order {
 export default function OrdersView() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Mock orders data con productos
   const [orders] = useState<Order[]>([
@@ -273,8 +275,8 @@ export default function OrdersView() {
 
     doc.save(`ordenes_rondal_clothes_${new Date().getTime()}.pdf`);
 
-    // Mostrar alerta de éxito
-    alert('✅ Reporte de órdenes exportado correctamente');
+    // Mostrar toast de éxito
+    setToastMessage('Reporte de órdenes exportado correctamente');
   };
 
   const handleExportOrderDetail = (order: Order) => {
@@ -371,8 +373,8 @@ export default function OrdersView() {
 
     doc.save(`orden_${order.id}_${new Date().getTime()}.pdf`);
 
-    // Mostrar alerta de éxito
-    alert('✅ Detalle de orden exportado correctamente');
+    // Mostrar toast de éxito
+    setToastMessage('Detalle de orden exportado correctamente');
   };
 
   const handleViewDetails = (order: Order) => {
@@ -684,6 +686,14 @@ export default function OrdersView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast de éxito */}
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          onClose={() => setToastMessage(null)}
+        />
       )}
     </div>
   );
