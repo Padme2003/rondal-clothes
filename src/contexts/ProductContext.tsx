@@ -168,6 +168,8 @@ const initialProducts: Product[] = [
 const normalizeProducts = (list: Product[]): Product[] =>
   list.map((product) => ({
     ...product,
+    price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
+    oldPrice: product.oldPrice && typeof product.oldPrice === 'string' ? parseFloat(product.oldPrice) : product.oldPrice,
     stock: typeof (product as Product).stock === 'number' ? (product as Product).stock : 10,
   }));
 

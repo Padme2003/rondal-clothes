@@ -18,25 +18,29 @@ export default function ProductCatalog() {
   useEffect(() => {
     let result = [...products];
 
+    // Búsqueda por nombre
     if (searchTerm) {
       result = result.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
 
+    // Filtro por categoría
     if (selectedCategory !== 'Todas') {
       result = result.filter((p) => p.category === selectedCategory);
     }
 
+    // Ordenamiento
     switch (sortBy) {
       case 'price-asc':
-        result.sort((a, b) => a.price - b.price);
+        result = result.sort((a, b) => Number(a.price) - Number(b.price));
         break;
       case 'price-desc':
-        result.sort((a, b) => b.price - a.price);
+        result = result.sort((a, b) => Number(b.price) - Number(a.price));
         break;
       case 'name':
-        result.sort((a, b) => a.name.localeCompare(b.name));
+        result = result.sort((a, b) => a.name.localeCompare(b.name));
         break;
       default:
+        // Sin ordenamiento, mantener orden original
         break;
     }
 
