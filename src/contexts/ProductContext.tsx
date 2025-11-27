@@ -184,11 +184,25 @@ const fallbackImages: Record<string, string> = {
 const ensureImage = (image: string, category: string) =>
   image?.trim() || fallbackImages[category] || 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=500';
 
+const PRODUCTS_VERSION = '2.0'; // Incrementar para forzar recarga
+
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
+    const savedVersion = localStorage.getItem('rondalClothesProductsVersion');
     const savedProducts = localStorage.getItem('rondalClothesProducts');
+
+    // Si la versión no coincide, limpiar localStorage y usar productos iniciales
+    if (savedVersion !== PRODUCTS_VERSION) {
+      console.log('Versión de productos actualizada, recargando...');
+      localStorage.removeItem('rondalClothesProducts');
+      localStorage.setItem('rondalClothesProductsVersion', PRODUCTS_VERSION);
+      setProducts(initialProducts);
+      return;
+    }
+
+    // Si hay productos guardados y la versión es correcta, usarlos
     if (savedProducts) {
       try {
         const parsed = JSON.parse(savedProducts) as Product[];
@@ -199,6 +213,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         localStorage.removeItem('rondalClothesProducts');
       }
     }
+
     setProducts(initialProducts);
   }, []);
 
