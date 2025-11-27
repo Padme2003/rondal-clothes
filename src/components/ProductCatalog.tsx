@@ -28,13 +28,21 @@ export default function ProductCatalog() {
       result = result.filter((p) => p.category === selectedCategory);
     }
 
-    // Ordenamiento
+    // Ordenamiento - usar el precio FINAL con descuento aplicado
     switch (sortBy) {
       case 'price-asc':
-        result = result.sort((a, b) => Number(a.price) - Number(b.price));
+        result = result.sort((a, b) => {
+          const priceA = Number(a.price) * (1 - a.discount / 100);
+          const priceB = Number(b.price) * (1 - b.discount / 100);
+          return priceA - priceB;
+        });
         break;
       case 'price-desc':
-        result = result.sort((a, b) => Number(b.price) - Number(a.price));
+        result = result.sort((a, b) => {
+          const priceA = Number(a.price) * (1 - a.discount / 100);
+          const priceB = Number(b.price) * (1 - b.discount / 100);
+          return priceB - priceA;
+        });
         break;
       case 'name':
         result = result.sort((a, b) => a.name.localeCompare(b.name));
