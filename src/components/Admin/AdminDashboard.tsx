@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Package, ShoppingCart, DollarSign, Users, TrendingUp, LogOut } from 'lucide-react';
 import { useProducts } from '../../contexts/ProductContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ProductManager from './ProductManager';
 import OrdersView from './OrdersView';
 import ClientsManager from './ClientsManager';
@@ -10,17 +10,78 @@ import ReportsView from './ReportsView';
 import SessionWarning from './SessionWarning';
 import SecurityInfo from './SecurityInfo';
 import { Button } from '../ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/alert-dialog';
 
-export default function AdminDashboard() {
+type AdminTab = 'overview' | 'products' | 'orders' | 'clients' | 'reports';
+
+interface AdminDashboardProps {
+  initialTab?: AdminTab;
+}
+
+export default function AdminDashboard({ initialTab }: AdminDashboardProps = {}) {
   const { products } = useProducts();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'clients' | 'reports'>('overview');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialTab ?? 'overview');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  useEffect(() => {
+    setActiveTab(initialTab ?? 'overview');
+  }, [initialTab]);
 
   const handleLogout = () => {
     logout();
     navigate('/admin/login');
   };
+
+  const getTabFromPath = (pathname: string): AdminTab => {
+    if (pathname.startsWith('/admin/clients')) return 'clients';
+    if (pathname.startsWith('/admin/reports')) return 'reports';
+    if (pathname.startsWith('/admin/products')) return 'products';
+    if (pathname.startsWith('/admin/orders')) return 'orders';
+    return 'overview';
+  };
+
+  useEffect(() => {
+    if (!initialTab) {
+      setActiveTab(getTabFromPath(location.pathname));
+    }
+  }, [initialTab, location.pathname]);
+
+  const tabRoutes: Record<AdminTab, string> = {
+    overview: '/admin',
+    products: '/admin/products',
+    orders: '/admin/orders',
+    clients: '/admin/clients',
+    reports: '/admin/reports',
+  };
+
+  const handleTabClick = (tab: AdminTab) => {
+    setActiveTab(tab);
+    const target = tabRoutes[tab];
+    if (location.pathname !== target) {
+      navigate(target);
+    }
+  };
+
+  const normalizeCategory = (category: string) =>
+    category?.trim().toLowerCase().replace(/\s+/g, ' ') || 'sin categoría';
+
+  const categoriesCount = products.reduce<Record<string, number>>((acc, product) => {
+    const key = normalizeCategory(product.category);
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
 
   // Mock statistics
   const stats = {
@@ -31,6 +92,7 @@ export default function AdminDashboard() {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50">
       <SessionWarning />
       <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] text-white py-8">
@@ -48,7 +110,7 @@ export default function AdminDashboard() {
               )}
             </div>
             <Button
-              onClick={handleLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               variant="outline"
               className="bg-transparent border-white/20 text-white hover:bg-white/10"
             >
@@ -64,7 +126,7 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 overflow-x-auto">
             <button
-              onClick={() => setActiveTab('overview')}
+              onClick={() => handleTabClick('overview')}
               className={`py-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'overview'
                   ? 'border-[#daa520] text-[#daa520]'
@@ -74,7 +136,7 @@ export default function AdminDashboard() {
               Resumen
             </button>
             <button
-              onClick={() => setActiveTab('products')}
+              onClick={() => handleTabClick('products')}
               className={`py-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'products'
                   ? 'border-[#daa520] text-[#daa520]'
@@ -84,7 +146,7 @@ export default function AdminDashboard() {
               Productos
             </button>
             <button
-              onClick={() => setActiveTab('orders')}
+              onClick={() => handleTabClick('orders')}
               className={`py-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'orders'
                   ? 'border-[#daa520] text-[#daa520]'
@@ -94,7 +156,7 @@ export default function AdminDashboard() {
               Órdenes
             </button>
             <button
-              onClick={() => setActiveTab('clients')}
+              onClick={() => handleTabClick('clients')}
               className={`py-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'clients'
                   ? 'border-[#daa520] text-[#daa520]'
@@ -104,7 +166,7 @@ export default function AdminDashboard() {
               Clientes
             </button>
             <button
-              onClick={() => setActiveTab('reports')}
+              onClick={() => handleTabClick('reports')}
               className={`py-4 px-2 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'reports'
                   ? 'border-[#daa520] text-[#daa520]'
@@ -189,13 +251,16 @@ export default function AdminDashboard() {
                   Productos por Categoría
                 </h2>
                 <div className="space-y-3">
-                  {Array.from(new Set(products.map(p => p.category))).map(category => {
-                    const count = products.filter(p => p.category === category).length;
-                    const percentage = (count / products.length) * 100;
+                  {Object.entries(categoriesCount).map(([key, count]) => {
+                    const label = key
+                      .split(' ')
+                      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                      .join(' ');
+                    const percentage = products.length ? (count / products.length) * 100 : 0;
                     return (
-                      <div key={category}>
+                      <div key={key}>
                         <div className="flex justify-between mb-1">
-                          <span className="text-gray-700">{category}</span>
+                          <span className="text-gray-700">{label}</span>
                           <span className="text-gray-600">{count}</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -207,6 +272,9 @@ export default function AdminDashboard() {
                       </div>
                     );
                   })}
+                  {products.length === 0 && (
+                    <p className="text-sm text-gray-500">Aún no hay productos para agrupar.</p>
+                  )}
                 </div>
               </div>
 
@@ -217,25 +285,25 @@ export default function AdminDashboard() {
                 </h2>
                 <div className="space-y-3">
                   <button
-                    onClick={() => setActiveTab('products')}
+                    onClick={() => handleTabClick('products')}
                     className="w-full bg-gradient-to-r from-[#b8860b] to-[#daa520] text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all text-left"
                   >
                     ➕ Agregar Nuevo Producto
                   </button>
                   <button
-                    onClick={() => setActiveTab('orders')}
+                    onClick={() => handleTabClick('orders')}
                     className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all text-left"
                   >
                     📦 Ver Todas las Órdenes
                   </button>
                   <button 
-                    onClick={() => setActiveTab('clients')}
+                    onClick={() => handleTabClick('clients')}
                     className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all text-left"
                   >
                     👥 Gestionar Clientes
                   </button>
                   <button 
-                    onClick={() => setActiveTab('reports')}
+                    onClick={() => handleTabClick('reports')}
                     className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all text-left"
                   >
                     📊 Ver Reportes
@@ -259,5 +327,22 @@ export default function AdminDashboard() {
         {activeTab === 'reports' && <ReportsView />}
       </div>
     </div>
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cerrar sesión del panel?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se cerrará tu sesión de administrador. Podrás volver a ingresar con tus credenciales.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-500">
+              Cerrar sesión
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

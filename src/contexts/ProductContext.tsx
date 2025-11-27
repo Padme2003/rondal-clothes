@@ -9,6 +9,7 @@ export interface Product {
   category: string;
   image: string;
   description: string;
+  stock: number;
 }
 
 interface ProductContextType {
@@ -16,6 +17,7 @@ interface ProductContextType {
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: number, product: Omit<Product, 'id'>) => void;
   deleteProduct: (id: number) => void;
+  adjustStock: (items: { id: number; quantity: number }[]) => void;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -37,17 +39,19 @@ const initialProducts: Product[] = [
     discount: 30,
     category: "Camisas",
     image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=500",
-    description: "Camisa formal de alta calidad, perfecta para eventos ejecutivos. Tela premium con acabados impecables."
+    description: "Camisa formal de alta calidad, perfecta para eventos ejecutivos. Tela premium con acabados impecables.",
+    stock: 18,
   },
   {
     id: 2,
-    name: "Pantalón de Vestir Clásico",
+    name: "Pantal�n de Vestir Cl�sico",
     price: 55.99,
     oldPrice: null,
     discount: 0,
     category: "Pantalones",
     image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=500",
-    description: "Pantalón de vestir con corte clásico. Ideal para combinar con cualquier camisa formal."
+    description: "Pantal�n de vestir con corte cl�sico. Ideal para combinar con cualquier camisa formal.",
+    stock: 22,
   },
   {
     id: 3,
@@ -57,7 +61,8 @@ const initialProducts: Product[] = [
     discount: 23,
     category: "Vestidos",
     image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500",
-    description: "Vestido versátil que combina elegancia y comodidad para cualquier ocasión."
+    description: "Vestido vers�til que combina elegancia y comodidad para cualquier ocasi�n.",
+    stock: 12,
   },
   {
     id: 4,
@@ -67,7 +72,8 @@ const initialProducts: Product[] = [
     discount: 30,
     category: "Chaquetas",
     image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500",
-    description: "Chaqueta de cuero genuino con diseño moderno y duradero. Una inversión en estilo."
+    description: "Chaqueta de cuero genuino con dise�o moderno y duradero. Una inversi�n en estilo.",
+    stock: 9,
   },
   {
     id: 5,
@@ -77,7 +83,8 @@ const initialProducts: Product[] = [
     discount: 0,
     category: "Blusas",
     image: "https://images.unsplash.com/photo-1564257577100-9fd6fd2f8a69?w=500",
-    description: "Blusa ligera y cómoda, perfecta para el día a día con estilo."
+    description: "Blusa ligera y c�moda, perfecta para el d�a a d�a con estilo.",
+    stock: 25,
   },
   {
     id: 6,
@@ -87,7 +94,8 @@ const initialProducts: Product[] = [
     discount: 0,
     category: "Pantalones",
     image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=500",
-    description: "Jeans de corte moderno con ajuste perfecto. Comodidad y estilo en una sola prenda."
+    description: "Jeans de corte moderno con ajuste perfecto. Comodidad y estilo en una sola prenda.",
+    stock: 30,
   },
   {
     id: 7,
@@ -97,7 +105,8 @@ const initialProducts: Product[] = [
     discount: 26,
     category: "Camisas",
     image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500",
-    description: "Camisa casual con patrón de cuadros clásico. Perfecta para looks informales."
+    description: "Camisa casual con patr�n de cuadros cl�sico. Perfecta para looks informales.",
+    stock: 15,
   },
   {
     id: 8,
@@ -107,17 +116,19 @@ const initialProducts: Product[] = [
     discount: 0,
     category: "Faldas",
     image: "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=500",
-    description: "Falda plisada que aporta movimiento y elegancia a tu outfit."
+    description: "Falda plisada que aporta movimiento y elegancia a tu outfit.",
+    stock: 14,
   },
   {
     id: 9,
-    name: "Suéter de Punto Premium",
+    name: "Su�ter de Punto Premium",
     price: 58.99,
     oldPrice: 75.99,
     discount: 22,
-    category: "Suéteres",
+    category: "Su�teres",
     image: "https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=500",
-    description: "Suéter de punto fino, suave al tacto y perfecto para climas frescos."
+    description: "Su�ter de punto fino, suave al tacto y perfecto para climas frescos.",
+    stock: 16,
   },
   {
     id: 10,
@@ -127,7 +138,8 @@ const initialProducts: Product[] = [
     discount: 29,
     category: "Chaquetas",
     image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=500",
-    description: "Blazer negro versátil que nunca pasa de moda. Esencial en todo guardarropa."
+    description: "Blazer negro vers�til que nunca pasa de moda. Esencial en todo guardarropa.",
+    stock: 11,
   },
   {
     id: 11,
@@ -137,7 +149,8 @@ const initialProducts: Product[] = [
     discount: 0,
     category: "Camisas",
     image: "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=500",
-    description: "Polo deportivo de tela transpirable. Comodidad para todo el día."
+    description: "Polo deportivo de tela transpirable. Comodidad para todo el d�a.",
+    stock: 20,
   },
   {
     id: 12,
@@ -147,45 +160,84 @@ const initialProducts: Product[] = [
     discount: 28,
     category: "Vestidos",
     image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=500",
-    description: "Vestido de noche elegante y sofisticado para eventos especiales."
-  }
+    description: "Vestido de noche elegante y sofisticado para eventos especiales.",
+    stock: 8,
+  },
 ];
+
+const normalizeProducts = (list: Product[]): Product[] =>
+  list.map((product) => ({
+    ...product,
+    stock: typeof (product as Product).stock === 'number' ? (product as Product).stock : 10,
+  }));
+
+const fallbackImages: Record<string, string> = {
+  Camisas: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500',
+  Pantalones: 'https://images.unsplash.com/photo-1542293787938-4d273c2f1ac2?w=500',
+  Vestidos: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500',
+  Chaquetas: 'https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?w=500',
+  Blusas: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500',
+};
+
+const ensureImage = (image: string, category: string) =>
+  image?.trim() || fallbackImages[category] || 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=500';
 
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
 
-  // Load products from localStorage on mount
   useEffect(() => {
     const savedProducts = localStorage.getItem('rondalClothesProducts');
     if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
-    } else {
-      setProducts(initialProducts);
+      try {
+        const parsed = JSON.parse(savedProducts) as Product[];
+        setProducts(normalizeProducts(parsed));
+        return;
+      } catch (error) {
+        console.error('Error al cargar productos guardados', error);
+        localStorage.removeItem('rondalClothesProducts');
+      }
     }
+    setProducts(initialProducts);
   }, []);
 
-  // Save products to localStorage whenever they change
   useEffect(() => {
-    if (products.length > 0) {
-      localStorage.setItem('rondalClothesProducts', JSON.stringify(products));
-    }
+    localStorage.setItem('rondalClothesProducts', JSON.stringify(products));
   }, [products]);
 
   const addProduct = (product: Omit<Product, 'id'>) => {
-    const newId = Math.max(...products.map(p => p.id), 0) + 1;
-    setProducts([...products, { ...product, id: newId }]);
+    const newId = Math.max(...products.map((p) => p.id), 0) + 1;
+    setProducts([
+      ...products,
+      { ...product, id: newId, image: ensureImage(product.image, product.category) },
+    ]);
   };
 
   const updateProduct = (id: number, updatedProduct: Omit<Product, 'id'>) => {
-    setProducts(products.map(p => p.id === id ? { ...updatedProduct, id } : p));
+    setProducts(
+      products.map((p) =>
+        p.id === id ? { ...updatedProduct, id, image: ensureImage(updatedProduct.image, updatedProduct.category) } : p
+      )
+    );
   };
 
   const deleteProduct = (id: number) => {
-    setProducts(products.filter(p => p.id !== id));
+    setProducts(products.filter((p) => p.id !== id));
+  };
+
+  const adjustStock = (items: { id: number; quantity: number }[]) => {
+    if (items.length === 0) return;
+    setProducts((prev) =>
+      prev.map((product) => {
+        const item = items.find((line) => line.id === product.id);
+        if (!item) return product;
+        const remaining = Math.max(0, product.stock - item.quantity);
+        return { ...product, stock: remaining };
+      })
+    );
   };
 
   return (
-    <ProductContext.Provider value={{ products, addProduct, updateProduct, deleteProduct }}>
+    <ProductContext.Provider value={{ products, addProduct, updateProduct, deleteProduct, adjustStock }}>
       {children}
     </ProductContext.Provider>
   );

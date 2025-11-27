@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useProducts } from '../../contexts/ProductContext';
 import { 
   TrendingUp, 
   DollarSign, 
@@ -122,14 +123,6 @@ const topProductsByPeriod = {
   ],
 };
 
-const categoryData = [
-  { name: 'Camisas', value: 35, color: '#b8860b' },
-  { name: 'Pantalones', value: 28, color: '#c9a227' },
-  { name: 'Chaquetas', value: 18, color: '#daa520' },
-  { name: 'Accesorios', value: 12, color: '#d4af37' },
-  { name: 'Calzado', value: 7, color: '#cfb53b' },
-];
-
 const revenueByDay = [
   { day: 'Lun', revenue: 1250 },
   { day: 'Mar', revenue: 1580 },
@@ -141,12 +134,46 @@ const revenueByDay = [
 ];
 
 export default function ReportsView() {
+  const { products } = useProducts();
   const [period, setPeriod] = useState('year');
   const [reportType, setReportType] = useState('ventas');
+  const reportTabs = [
+    { value: 'ventas', label: 'Ventas' },
+    { value: 'productos', label: 'Productos' },
+    { value: 'categorias', label: 'Categorías' },
+    { value: 'tendencias', label: 'Tendencias' },
+  ];
 
   // Datos dinámicos basados en el período seleccionado
   const monthlySalesData = useMemo(() => generateDataByPeriod(period), [period]);
   const topProducts = useMemo(() => topProductsByPeriod[period as keyof typeof topProductsByPeriod], [period]);
+
+  const categoryDistribution = useMemo(() => {
+    const palette = ['#b8860b', '#c9a227', '#daa520', '#d4af37', '#cfb53b', '#c49a00', '#d5c186'];
+    const total = products.length || 1;
+    const grouped = products.reduce<Record<string, number>>((acc, product) => {
+      acc[product.category] = (acc[product.category] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(grouped).map(([name, count], index) => ({
+      name,
+      value: Math.round((count / total) * 100),
+      count,
+      color: palette[index % palette.length],
+    }));
+  }, [products]);
+
+  const productStats = useMemo(
+    () => ({
+      totalProducts: products.length,
+      totalCategories: categoryDistribution.length,
+      avgPrice:
+        products.length === 0
+          ? 0
+          : products.reduce((sum, p) => sum + p.price, 0) / products.length,
+    }),
+    [products, categoryDistribution.length]
+  );
 
   // Calcular estadísticas dinámicamente
   const stats = useMemo(() => {
@@ -239,6 +266,33 @@ export default function ReportsView() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Total productos activos</CardDescription>
+            <CardTitle className="text-2xl bg-gradient-to-r from-[#b8860b] to-[#daa520] bg-clip-text text-transparent">
+              {productStats.totalProducts}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Categorías distintas</CardDescription>
+            <CardTitle className="text-2xl bg-gradient-to-r from-[#b8860b] to-[#daa520] bg-clip-text text-transparent">
+              {productStats.totalCategories}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Precio promedio catálogo</CardDescription>
+            <CardTitle className="text-2xl bg-gradient-to-r from-[#b8860b] to-[#daa520] bg-clip-text text-transparent">
+              ${productStats.avgPrice.toFixed(2)}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -311,8 +365,25 @@ export default function ReportsView() {
         </Card>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {reportTabs.map((tab) => (
+          <Button
+            key={tab.value}
+            variant={reportType === tab.value ? 'secondary' : 'outline'}
+            size="sm"
+            onClick={() => setReportType(tab.value)}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+      <p className="text-xs uppercase tracking-[0.4em] text-gray-500">
+        Mostrando: {reportTabs.find((tab) => tab.value === reportType)?.label ?? 'Ventas'} • Periodo seleccionado:{' '}
+        {period === 'year' ? 'Último año' : period === 'quarter' ? 'Último trimestre' : period === 'month' ? 'Último mes' : 'Última semana'}
+      </p>
+
       {/* Charts Tabs */}
-      <Tabs defaultValue="ventas" onValueChange={setReportType}>
+      <Tabs value={reportType} onValueChange={setReportType}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="ventas">
             <BarChart3 size={16} className="mr-2" />
@@ -527,7 +598,7 @@ export default function ReportsView() {
                 <ResponsiveContainer width="100%" height={400}>
                   <RechartsPieChart>
                     <Pie
-                      data={categoryData}
+                      data={categoryDistribution}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -536,7 +607,7 @@ export default function ReportsView() {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {categoryData.map((entry, index) => (
+                      {categoryDistribution.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -555,7 +626,7 @@ export default function ReportsView() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {categoryData.map((category) => (
+                  {categoryDistribution.map((category) => (
                     <div key={category.name} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="flex items-center space-x-2">
@@ -566,7 +637,7 @@ export default function ReportsView() {
                           <span>{category.name}</span>
                         </span>
                         <span className="bg-gradient-to-r from-[#b8860b] to-[#daa520] bg-clip-text text-transparent">
-                          {category.value}%
+                          {category.value}% · {category.count} productos
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
@@ -580,6 +651,9 @@ export default function ReportsView() {
                       </div>
                     </div>
                   ))}
+                  {categoryDistribution.length === 0 && (
+                    <p className="text-sm text-gray-500">Aún no hay productos para mostrar.</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

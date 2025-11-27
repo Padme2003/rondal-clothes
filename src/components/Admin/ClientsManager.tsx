@@ -175,11 +175,25 @@ const mockClients = [
   },
 ];
 
+type StatusFilter = 'all' | 'active' | 'inactive';
+
 export default function ClientsManager() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedClient, setSelectedClient] = useState<typeof mockClients[0] | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const statusChips: { label: string; value: StatusFilter }[] = [
+    { label: 'Todos los clientes', value: 'all' },
+    { label: 'Activos', value: 'active' },
+    { label: 'Inactivos', value: 'inactive' },
+  ];
+
+  const handleFilterSelect = (value: StatusFilter) => {
+    setStatusFilter(value);
+    if (value === 'all') {
+      setSearchTerm('');
+    }
+  };
 
   // Filtrar clientes
   const filteredClients = useMemo(() => {
@@ -235,6 +249,19 @@ export default function ClientsManager() {
         <p className="text-gray-600">
           Administra y monitorea la información de tus clientes
         </p>
+        <div className="flex flex-wrap gap-2 mt-4">
+          {statusChips.map((chip) => (
+            <Button
+              key={chip.value}
+              variant={statusFilter === chip.value ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => handleFilterSelect(chip.value)}
+              className={statusFilter === chip.value ? 'border-[#daa520] text-white bg-gradient-to-r from-[#b8860b] to-[#daa520]' : ''}
+            >
+              {chip.label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Stats Cards */}

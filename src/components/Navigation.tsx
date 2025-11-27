@@ -1,21 +1,39 @@
-import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Shield } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Menu, X } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 
 export default function Navigation() {
   const { getCartItemsCount } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const cartCount = getCartItemsCount();
+  const navigate = useNavigate();
 
   const isActive = (path: string) => location.pathname === path;
   
   // Ocultar navegación en páginas de admin
   const isAdminPage = location.pathname.startsWith('/admin');
   if (isAdminPage) return null;
+
+  const handleLogout = () => {
+    logout();
+    setMobileMenuOpen(false);
+    navigate('/');
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] shadow-lg">
@@ -60,20 +78,54 @@ export default function Navigation() {
                 </span>
               )}
             </Link>
-            <Link
-              to="/admin"
-              className={`text-sm transition-colors ${
-                isActive('/admin') ? 'text-[#daa520]' : 'text-white hover:text-[#daa520]'
-              }`}
-            >
-              Admin
-            </Link>
-            <Link
-              to="/checkout"
+            <button
+              type="button"
+              onClick={() => navigate('/checkout')}
               className="bg-gradient-to-r from-[#b8860b] to-[#daa520] text-white px-6 py-2 rounded-full text-sm hover:shadow-lg hover:shadow-[#b8860b]/50 transition-all"
             >
               Checkout
-            </Link>
+            </button>
+            {!isAuthenticated && (
+              <>
+                <Link
+                  to="/login"
+                  className={`text-sm transition-colors ${
+                    isActive('/login') ? 'text-[#daa520]' : 'text-white hover:text-[#daa520]'
+                  }`}
+                >
+                  Iniciar sesión
+                </Link>
+                <Link
+                  to="/register"
+                  className={`text-sm transition-colors ${
+                    isActive('/register') ? 'text-[#daa520]' : 'text-white hover:text-[#daa520]'
+                  }`}
+                >
+                  Registrarse
+                </Link>
+              </>
+            )}
+            {isAuthenticated && (
+              <>
+                <Link
+                  to="/orders"
+                  className={`text-sm transition-colors ${
+                    isActive('/orders') ? 'text-[#daa520]' : 'text-white hover:text-[#daa520]'
+                  }`}
+                >
+                  Mis compras
+                </Link>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-white/80">Hola, {user?.username ?? 'Cliente'}</span>
+                  <button
+                    onClick={() => setShowLogoutConfirm(true)}
+                    className="text-sm text-white hover:text-[#daa520]"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -131,9 +183,66 @@ export default function Navigation() {
             >
               Checkout
             </Link>
+            {!isAuthenticated && (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block py-2 text-sm ${
+                    isActive('/login') ? 'text-[#daa520]' : 'text-white'
+                  }`}
+                >
+                  Iniciar sesión
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block py-2 text-sm ${
+                    isActive('/register') ? 'text-[#daa520]' : 'text-white'
+                  }`}
+                >
+                  Registrarse
+                </Link>
+              </>
+            )}
+            {isAuthenticated && (
+              <>
+                <Link
+                  to="/orders"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block py-2 text-sm ${
+                    isActive('/orders') ? 'text-[#daa520]' : 'text-white'
+                  }`}
+                >
+                  Mis compras
+                </Link>
+                <button
+                  onClick={() => setShowLogoutConfirm(true)}
+                  className="block w-full text-left text-sm text-white hover:text-[#daa520] py-2"
+                >
+                  Cerrar sesión
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Saldrás de tu cuenta actual. Podrás volver a iniciar sesión en cualquier momento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-500">
+              Cerrar sesión
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </nav>
   );
 }
