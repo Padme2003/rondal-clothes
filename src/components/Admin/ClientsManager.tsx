@@ -301,6 +301,91 @@ export default function ClientsManager() {
     alert('✅ Reporte de clientes exportado correctamente');
   };
 
+  const handleExportClientDetail = (client: typeof mockClients[0]) => {
+    const doc = new jsPDF();
+
+    // Título
+    doc.setFontSize(20);
+    doc.setTextColor(184, 134, 11);
+    doc.text('Rondal Clothes', 105, 15, { align: 'center' });
+
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Detalle de Cliente', 105, 25, { align: 'center' });
+
+    // ID de cliente
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Cliente: ${client.id}`, 105, 35, { align: 'center' });
+
+    // Información del cliente
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Información Personal', 14, 45);
+
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Nombre: ${client.name}`, 14, 52);
+    doc.text(`Email: ${client.email}`, 14, 58);
+    doc.text(`Teléfono: ${client.phone}`, 14, 64);
+    doc.text(`Ubicación: ${client.location}`, 14, 70);
+    doc.text(`Fecha de Registro: ${new Date(client.registeredDate).toLocaleDateString('es-ES')}`, 14, 76);
+    doc.text(`Estado: ${client.status === 'active' ? 'Activo' : 'Inactivo'}`, 14, 82);
+
+    // Estadísticas del cliente
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Estadísticas de Compra', 14, 93);
+
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Total de Órdenes: ${client.totalOrders}`, 14, 100);
+    doc.text(`Total Gastado: $${client.totalSpent.toFixed(2)}`, 14, 106);
+    doc.text(`Ticket Promedio: $${(client.totalSpent / client.totalOrders).toFixed(2)}`, 14, 112);
+    doc.text(`Última Compra: ${new Date(client.lastOrder).toLocaleDateString('es-ES')}`, 14, 118);
+
+    // Historial de órdenes
+    const orderData = client.orders.map(order => [
+      order.id,
+      new Date(order.date).toLocaleDateString('es-ES'),
+      `$${order.amount.toFixed(2)}`,
+      order.status === 'completed' ? 'Completado' : order.status
+    ]);
+
+    autoTable(doc, {
+      startY: 128,
+      head: [['N° Orden', 'Fecha', 'Monto', 'Estado']],
+      body: orderData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [184, 134, 11],
+        textColor: [255, 255, 255],
+        fontSize: 10,
+        fontStyle: 'bold'
+      },
+      bodyStyles: {
+        fontSize: 9
+      },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 40, halign: 'right' },
+        3: { cellWidth: 50, halign: 'center' }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    // Pie de página
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text('Rondal Clothes - Reporte de Cliente', 105, 280, { align: 'center' });
+
+    doc.save(`cliente_${client.id}_${new Date().getTime()}.pdf`);
+
+    // Mostrar alerta de éxito
+    alert('✅ Detalle de cliente exportado correctamente');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -633,6 +718,24 @@ export default function ClientsManager() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Botones de Acción */}
+              <div className="flex gap-3 border-t pt-4 mt-6">
+                <Button
+                  onClick={() => setShowDetails(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cerrar
+                </Button>
+                <Button
+                  onClick={() => selectedClient && handleExportClientDetail(selectedClient)}
+                  className="flex-1 bg-gradient-to-r from-[#b8860b] to-[#daa520] text-white hover:shadow-lg"
+                >
+                  <Download size={16} className="mr-2" />
+                  Exportar PDF
+                </Button>
               </div>
             </div>
           )}
