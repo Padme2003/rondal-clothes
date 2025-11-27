@@ -39,7 +39,7 @@ export default function CustomerOrders() {
   const { isAuthenticated, user } = useAuth();
   const [invoiceOrder, setInvoiceOrder] = useState<StoredOrder | null>(null);
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: '/orders', message: 'Inicia sesi�n para ver tus compras' }} />;
+    return <Navigate to="/login" replace state={{ from: '/orders', message: 'Inicia sesión para ver tus compras' }} />;
   }
 
   const orders: StoredOrder[] = [...((user?.orders as StoredOrder[] | undefined) ?? [])].reverse();
@@ -58,21 +58,21 @@ export default function CustomerOrders() {
             <p className="text-sm uppercase tracking-[0.4em] text-gray-500">Cuenta</p>
             <h1 className="text-4xl font-semibold text-gray-900">Historial de compras</h1>
             <p className="text-gray-600">
-              Todas las compras que hayas realizado desde esta cuenta aparecen aqu�. Puedes revisar totales, direcciones y productos asociados.
+              Todas las compras que hayas realizado desde esta cuenta aparecen aquí. Puedes revisar totales, direcciones y productos asociados.
             </p>
           </div>
 
           {orders.length === 0 ? (
             <div className="rounded-3xl bg-gray-50 border border-dashed border-gray-200 p-10 text-center space-y-4">
-              <p className="text-lg text-gray-800 font-semibold">Todav�a no tienes compras registradas.</p>
+              <p className="text-lg text-gray-800 font-semibold">Todavía no tienes compras registradas.</p>
               <p className="text-sm text-gray-500">
-                Navega por nuestro cat�logo y finaliza una compra para comenzar a ver tu historial.
+                Navega por nuestro catálogo y finaliza una compra para comenzar a ver tu historial.
               </p>
               <Link
                 to="/catalog"
                 className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#b8860b] to-[#daa520] px-6 py-3 text-white text-sm font-semibold hover:shadow-lg hover:shadow-[#b8860b]/50 transition-all"
               >
-                Explorar cat�logo
+                Explorar catálogo
               </Link>
             </div>
           ) : (
@@ -103,7 +103,7 @@ export default function CustomerOrders() {
                       <p className="text-sm text-gray-600">{order.email}</p>
                     </div>
                     <div className="text-right min-w-[220px]">
-                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Direcci�n</p>
+                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Dirección</p>
                       <p className="text-sm text-gray-600">{order.shippingAddress}</p>
                       <p className="text-sm text-gray-600">
                         {order.city}, {order.postalCode}
@@ -119,7 +119,7 @@ export default function CustomerOrders() {
                       onClick={() => setInvoiceOrder(order)}
                       className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#b8860b] to-[#daa520] px-4 py-2 text-white text-sm font-semibold hover:shadow-lg hover:shadow-[#b8860b]/40 transition-all"
                     >
-                      Ver factura electr�nica
+                      Ver factura electrónica
                     </button>
                   </div>
                 </article>
@@ -142,7 +142,7 @@ export default function CustomerOrders() {
           <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b">
               <div>
-                <p className="text-xs uppercase tracking-[0.4em] text-gray-500">Factura electr�nica</p>
+                <p className="text-xs uppercase tracking-[0.4em] text-gray-500">Factura electrónica</p>
                 <p className="text-lg font-semibold text-gray-900">{invoiceOrder.orderNumber}</p>
               </div>
               <button
@@ -165,7 +165,7 @@ export default function CustomerOrders() {
                   <p className="text-sm text-gray-700">{formatDate(invoiceOrder.createdAt)}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Direcci�n</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Dirección</p>
                   <p className="text-sm text-gray-700">{invoiceOrder.shippingAddress}</p>
                   <p className="text-sm text-gray-700">
                     {invoiceOrder.city}, {invoiceOrder.postalCode}
@@ -192,7 +192,7 @@ export default function CustomerOrders() {
                     </div>
                   ))}
                   {(invoiceOrder.lines ?? []).length === 0 && (
-                    <div className="px-4 py-3 text-sm text-gray-500">No hay l�neas detalladas para este pedido.</div>
+                    <div className="px-4 py-3 text-sm text-gray-500">No hay líneas detalladas para este pedido.</div>
                   )}
                 </div>
               </div>

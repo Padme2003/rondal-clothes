@@ -44,13 +44,13 @@ const initialProducts: Product[] = [
   },
   {
     id: 2,
-    name: "Pantal�n de Vestir Cl�sico",
+    name: "Pantalón de Vestir Clásico",
     price: 55.99,
     oldPrice: null,
     discount: 0,
     category: "Pantalones",
     image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=500",
-    description: "Pantal�n de vestir con corte cl�sico. Ideal para combinar con cualquier camisa formal.",
+    description: "Pantalón de vestir con corte clásico. Ideal para combinar con cualquier camisa formal.",
     stock: 22,
   },
   {
@@ -61,7 +61,7 @@ const initialProducts: Product[] = [
     discount: 23,
     category: "Vestidos",
     image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500",
-    description: "Vestido vers�til que combina elegancia y comodidad para cualquier ocasi�n.",
+    description: "Vestido versátil que combina elegancia y comodidad para cualquier ocasión.",
     stock: 12,
   },
   {
@@ -72,7 +72,7 @@ const initialProducts: Product[] = [
     discount: 30,
     category: "Chaquetas",
     image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500",
-    description: "Chaqueta de cuero genuino con dise�o moderno y duradero. Una inversi�n en estilo.",
+    description: "Chaqueta de cuero genuino con diseño moderno y duradero. Una inversión en estilo.",
     stock: 9,
   },
   {
@@ -83,7 +83,7 @@ const initialProducts: Product[] = [
     discount: 0,
     category: "Blusas",
     image: "https://images.unsplash.com/photo-1564257577100-9fd6fd2f8a69?w=500",
-    description: "Blusa ligera y c�moda, perfecta para el d�a a d�a con estilo.",
+    description: "Blusa ligera y cómoda, perfecta para el día a día con estilo.",
     stock: 25,
   },
   {
@@ -105,7 +105,7 @@ const initialProducts: Product[] = [
     discount: 26,
     category: "Camisas",
     image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500",
-    description: "Camisa casual con patr�n de cuadros cl�sico. Perfecta para looks informales.",
+    description: "Camisa casual con patrón de cuadros clásico. Perfecta para looks informales.",
     stock: 15,
   },
   {
@@ -121,13 +121,13 @@ const initialProducts: Product[] = [
   },
   {
     id: 9,
-    name: "Su�ter de Punto Premium",
+    name: "Suéter de Punto Premium",
     price: 58.99,
     oldPrice: 75.99,
     discount: 22,
-    category: "Su�teres",
+    category: "Suéteres",
     image: "https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=500",
-    description: "Su�ter de punto fino, suave al tacto y perfecto para climas frescos.",
+    description: "Suéter de punto fino, suave al tacto y perfecto para climas frescos.",
     stock: 16,
   },
   {
@@ -138,7 +138,7 @@ const initialProducts: Product[] = [
     discount: 29,
     category: "Chaquetas",
     image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=500",
-    description: "Blazer negro vers�til que nunca pasa de moda. Esencial en todo guardarropa.",
+    description: "Blazer negro versátil que nunca pasa de moda. Esencial en todo guardarropa.",
     stock: 11,
   },
   {
@@ -149,7 +149,7 @@ const initialProducts: Product[] = [
     discount: 0,
     category: "Camisas",
     image: "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=500",
-    description: "Polo deportivo de tela transpirable. Comodidad para todo el d�a.",
+    description: "Polo deportivo de tela transpirable. Comodidad para todo el día.",
     stock: 20,
   },
   {

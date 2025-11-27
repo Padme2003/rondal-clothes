@@ -110,7 +110,7 @@ export default function ProductCatalog() {
           {showFilters && (
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-gray-600">Categor�as:</span>
+                <span className="text-gray-600">Categorías:</span>
                 {categories.map((category) => (
                   <button
                     key={category}
@@ -213,9 +213,9 @@ export default function ProductCatalog() {
                       {outOfStock
                         ? 'Sin stock'
                         : atLimit
-                          ? 'Stock m�ximo en carrito'
+                          ? 'Stock máximo en carrito'
                           : addedToCart === product.id
-                            ? '� Agregado'
+                            ? '✓ Agregado'
                             : 'Agregar al Carrito'}
                     </button>
                   </div>

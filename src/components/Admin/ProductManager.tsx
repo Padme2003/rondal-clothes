@@ -137,9 +137,9 @@ export default function ProductManager() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-3xl bg-gradient-to-r from-[#b8860b] to-[#daa520] bg-clip-text text-transparent">
-            Gesti�n de Productos
+            Gestión de Productos
           </h2>
-          <p className="text-gray-600">Administra el cat�logo de productos</p>
+          <p className="text-gray-600">Administra el catálogo de productos</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
@@ -163,7 +163,7 @@ export default function ProductManager() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs uppercase tracking-wider text-gray-600">Imagen</th>
                 <th className="px-6 py-3 text-left text-xs uppercase tracking-wider text-gray-600">Nombre</th>
-                <th className="px-6 py-3 text-left text-xs uppercase tracking-wider text-gray-600">Categor�a</th>
+                <th className="px-6 py-3 text-left text-xs uppercase tracking-wider text-gray-600">Categoría</th>
                 <th className="px-6 py-3 text-left text-xs uppercase tracking-wider text-gray-600">Precio</th>
                 <th className="px-6 py-3 text-left text-xs uppercase tracking-wider text-gray-600">Descuento</th>
                 <th className="px-6 py-3 text-left text-xs uppercase tracking-wider text-gray-600">Stock</th>
@@ -316,7 +316,7 @@ export default function ProductManager() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 text-gray-700">Categor�a *</label>
+                  <label className="block text-sm mb-2 text-gray-700">Categoría *</label>
                   <input
                     type="text"
                     required
@@ -340,14 +340,14 @@ export default function ProductManager() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm mb-2 text-gray-700">Descripci�n *</label>
+                  <label className="block text-sm mb-2 text-gray-700">Descripción *</label>
                   <textarea
                     required
                     rows={3}
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#daa520]"
-                    placeholder="Descripci�n detallada del producto..."
+                    placeholder="Descripción detallada del producto..."
                   />
                 </div>
               </div>
@@ -379,12 +379,12 @@ export default function ProductManager() {
               <div className="bg-red-100 p-2 rounded-full">
                 <AlertTriangle className="text-red-600" size={24} />
               </div>
-              <AlertDialogTitle className="text-xl">�Eliminar Producto?</AlertDialogTitle>
+              <AlertDialogTitle className="text-xl">¿Eliminar Producto?</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="text-base">
               {productToDelete && (
                 <div className="space-y-3">
-                  <p>Est�s a punto de eliminar el producto:</p>
+                  <p>Estás a punto de eliminar el producto:</p>
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <div className="flex items-center gap-3">
                       <img src={productToDelete.image} alt={productToDelete.name} className="w-16 h-16 object-cover rounded" />
@@ -398,7 +398,7 @@ export default function ProductManager() {
                     </div>
                   </div>
                   <p className="text-red-600">
-                    Esta acci�n no se puede deshacer. El producto ser� eliminado permanentemente del cat�logo.
+                    Esta acción no se puede deshacer. El producto será eliminado permanentemente del catálogo.
                   </p>
                 </div>
               )}
@@ -407,7 +407,7 @@ export default function ProductManager() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700 text-white">
-              S�, Eliminar
+              Sí, Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
