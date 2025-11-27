@@ -272,6 +272,9 @@ export default function OrdersView() {
     });
 
     doc.save(`ordenes_rondal_clothes_${new Date().getTime()}.pdf`);
+
+    // Mostrar alerta de éxito
+    alert('✅ Reporte de órdenes exportado correctamente');
   };
 
   const handleExportOrderDetail = (order: Order) => {
@@ -367,6 +370,9 @@ export default function OrdersView() {
     doc.text('Gracias por su compra - Rondal Clothes', 105, 280, { align: 'center' });
 
     doc.save(`orden_${order.id}_${new Date().getTime()}.pdf`);
+
+    // Mostrar alerta de éxito
+    alert('✅ Detalle de orden exportado correctamente');
   };
 
   const handleViewDetails = (order: Order) => {

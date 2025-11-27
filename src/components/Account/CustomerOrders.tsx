@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 type StoredOrder = {
   orderNumber: string;
@@ -47,7 +50,123 @@ export default function CustomerOrders() {
   const renderPaymentMethod = (method?: string) => {
     if (method === 'transfer') return 'Transferencia';
     if (method === 'cash') return 'Pago contra entrega';
+    if (method === 'paypal') return 'PayPal (simulado)';
     return 'Tarjeta (simulado)';
+  };
+
+  const handleExportInvoicePDF = (order: StoredOrder) => {
+    const doc = new jsPDF();
+
+    // Título
+    doc.setFontSize(20);
+    doc.setTextColor(184, 134, 11);
+    doc.text('Rondal Clothes', 105, 15, { align: 'center' });
+
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Factura Electrónica', 105, 25, { align: 'center' });
+
+    // Número de orden
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Orden: ${order.orderNumber}`, 105, 35, { align: 'center' });
+
+    // Información del cliente
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Información del Cliente', 14, 45);
+
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Email: ${order.email}`, 14, 52);
+    doc.text(`Dirección: ${order.shippingAddress}`, 14, 58);
+    doc.text(`Ciudad: ${order.city}, CP: ${order.postalCode}`, 14, 64);
+
+    // Información de la orden
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Información de la Orden', 14, 73);
+
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Fecha: ${formatDate(order.createdAt)}`, 14, 80);
+    doc.text(`Método de Pago: ${renderPaymentMethod(order.paymentMethod)}`, 14, 86);
+    doc.text(`Cantidad de productos: ${order.items}`, 14, 92);
+
+    // Tabla de productos
+    const productData = (order.lines || []).map(line => [
+      line.name,
+      line.quantity.toString(),
+      `$${line.unitPrice.toFixed(2)}`,
+      line.discount > 0 ? `${line.discount}%` : '-',
+      `$${line.lineTotal.toFixed(2)}`
+    ]);
+
+    autoTable(doc, {
+      startY: 100,
+      head: [['Producto', 'Cant.', 'Precio Unit.', 'Desc.', 'Subtotal']],
+      body: productData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [184, 134, 11],
+        textColor: [255, 255, 255],
+        fontSize: 10,
+        fontStyle: 'bold'
+      },
+      bodyStyles: {
+        fontSize: 9
+      },
+      columnStyles: {
+        0: { cellWidth: 70 },
+        1: { cellWidth: 25, halign: 'center' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 25, halign: 'center' },
+        4: { cellWidth: 35, halign: 'right' }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    // Resumen de totales
+    const finalY = (doc as any).lastAutoTable.finalY || 150;
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+
+    let currentY = finalY + 10;
+    doc.text('Subtotal:', 130, currentY);
+    doc.text(`$${(order.totals?.subtotal ?? order.total).toFixed(2)}`, 175, currentY, { align: 'right' });
+
+    currentY += 6;
+    doc.text('Descuentos:', 130, currentY);
+    doc.setTextColor(0, 128, 0);
+    doc.text(`-$${(order.totals?.discount ?? 0).toFixed(2)}`, 175, currentY, { align: 'right' });
+
+    currentY += 6;
+    doc.setTextColor(80, 80, 80);
+    doc.text('Subtotal con descuento:', 130, currentY);
+    doc.text(`$${(order.totals?.taxableBase ?? order.total).toFixed(2)}`, 175, currentY, { align: 'right' });
+
+    currentY += 6;
+    doc.text(`IVA (${Math.round((order.totals?.ivaRate ?? 0) * 100)}%):`, 130, currentY);
+    doc.text(`$${(order.totals?.tax ?? 0).toFixed(2)}`, 175, currentY, { align: 'right' });
+
+    currentY += 10;
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text('TOTAL:', 130, currentY);
+    doc.setFontSize(14);
+    doc.setTextColor(184, 134, 11);
+    doc.text(`$${order.total.toFixed(2)}`, 175, currentY, { align: 'right' });
+
+    // Pie de página
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text('Gracias por su compra - Rondal Clothes', 105, 280, { align: 'center' });
+    doc.text('Factura electrónica válida', 105, 285, { align: 'center' });
+
+    doc.save(`factura_${order.orderNumber}_${new Date().getTime()}.pdf`);
+
+    // Mostrar alerta de éxito
+    alert('✅ Factura descargada correctamente');
   };
 
   return (
@@ -222,15 +341,25 @@ export default function CustomerOrders() {
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 bg-gray-50 flex justify-between items-center">
+            <div className="px-6 py-4 bg-gray-50 flex justify-between items-center gap-4">
               <p className="text-xs text-gray-500">Descarga o imprime este comprobante para tus registros.</p>
-              <button
-                type="button"
-                onClick={() => setInvoiceOrder(null)}
-                className="text-sm text-[#b8860b] font-semibold hover:text-[#daa520]"
-              >
-                Cerrar
-              </button>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleExportInvoicePDF(invoiceOrder)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#b8860b] to-[#daa520] text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold"
+                >
+                  <Download size={16} />
+                  Descargar PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInvoiceOrder(null)}
+                  className="text-sm text-gray-600 font-semibold hover:text-[#daa520] px-4 py-2"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         </div>

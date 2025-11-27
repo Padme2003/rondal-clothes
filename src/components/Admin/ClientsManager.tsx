@@ -296,6 +296,9 @@ export default function ClientsManager() {
 
     // Guardar PDF
     doc.save(`clientes_rondal_clothes_${new Date().getTime()}.pdf`);
+
+    // Mostrar alerta de éxito
+    alert('✅ Reporte de clientes exportado correctamente');
   };
 
   return (
