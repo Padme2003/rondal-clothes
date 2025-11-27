@@ -69,9 +69,9 @@ export default function ProductCatalog() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-4xl mb-2 bg-gradient-to-r from-[#b8860b] via-[#c9a227] to-[#daa520] bg-clip-text text-transparent">
-            Cat�logo de Productos
+            Catálogo de Productos
           </h1>
-          <p className="text-gray-600">Descubre nuestra colecci�n completa</p>
+          <p className="text-gray-600">Descubre nuestra colección completa</p>
         </div>
 
         <div className="bg-white p-4 rounded-lg shadow-md mb-6">

@@ -1,7 +1,9 @@
 
   {
-      "name": "Untitled",
-      "version": "0.1.0",
+      "name": "rondal-clothes",
+      "version": "1.0.0",
+      "description": "Rondal Clothes - E-commerce Platform - Instituto Yavirac",
+      "author": "Javier Villarroel, Pamela Moposita, David Villagómez",
       "private": true,
       "dependencies": {
           "@radix-ui/react-accordion": "^1.2.3",
