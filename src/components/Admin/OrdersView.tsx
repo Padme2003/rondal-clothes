@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Package, Eye, X, MapPin, Phone, Mail, Calendar, CreditCard, Truck } from 'lucide-react';
+import { Package, Eye, X, MapPin, Phone, Mail, Calendar, CreditCard, Truck, FileText, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface OrderItem {
   id: number;
@@ -204,6 +206,169 @@ export default function OrdersView() {
     }
   };
 
+  const handleExportAllOrders = () => {
+    const doc = new jsPDF();
+
+    // Título
+    doc.setFontSize(20);
+    doc.setTextColor(184, 134, 11);
+    doc.text('Rondal Clothes', 105, 15, { align: 'center' });
+
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Reporte de Órdenes', 105, 25, { align: 'center' });
+
+    // Información de fecha y estadísticas
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    const fecha = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.text(`Generado: ${fecha}`, 14, 35);
+    doc.text(`Total de órdenes: ${orders.length}`, 14, 40);
+    doc.text(`Ingresos totales: $${orders.reduce((sum, o) => sum + o.total, 0).toFixed(2)}`, 14, 45);
+
+    // Tabla de órdenes
+    const tableData = orders.map(order => [
+      order.id,
+      order.customerName,
+      order.email,
+      new Date(order.date).toLocaleDateString('es-ES'),
+      order.items.toString(),
+      `$${order.total.toFixed(2)}`,
+      getStatusText(order.status),
+      order.paymentMethod || 'N/A'
+    ]);
+
+    autoTable(doc, {
+      startY: 50,
+      head: [['N° Orden', 'Cliente', 'Email', 'Fecha', 'Items', 'Total', 'Estado', 'Pago']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [184, 134, 11],
+        textColor: [255, 255, 255],
+        fontSize: 9,
+        fontStyle: 'bold'
+      },
+      bodyStyles: {
+        fontSize: 8
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 28 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 12, halign: 'center' },
+        5: { cellWidth: 20, halign: 'right' },
+        6: { cellWidth: 20 },
+        7: { cellWidth: 28 }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    doc.save(`ordenes_rondal_clothes_${new Date().getTime()}.pdf`);
+  };
+
+  const handleExportOrderDetail = (order: Order) => {
+    const doc = new jsPDF();
+
+    // Título
+    doc.setFontSize(20);
+    doc.setTextColor(184, 134, 11);
+    doc.text('Rondal Clothes', 105, 15, { align: 'center' });
+
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Detalle de Orden', 105, 25, { align: 'center' });
+
+    // Número de orden
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Orden: ${order.id}`, 105, 35, { align: 'center' });
+
+    // Información del cliente
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Información del Cliente', 14, 45);
+
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Nombre: ${order.customerName}`, 14, 52);
+    doc.text(`Email: ${order.email}`, 14, 58);
+    if (order.phone) doc.text(`Teléfono: ${order.phone}`, 14, 64);
+    if (order.address) {
+      doc.text('Dirección:', 14, 70);
+      const addressLines = doc.splitTextToSize(order.address, 180);
+      doc.text(addressLines, 14, 76);
+    }
+
+    // Información de la orden
+    const infoY = order.address ? 85 : 73;
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Información de la Orden', 14, infoY);
+
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Fecha: ${new Date(order.date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}`, 14, infoY + 7);
+    doc.text(`Estado: ${getStatusText(order.status)}`, 14, infoY + 13);
+    doc.text(`Método de Pago: ${order.paymentMethod || 'No especificado'}`, 14, infoY + 19);
+    if (order.trackingNumber) doc.text(`Seguimiento: ${order.trackingNumber}`, 14, infoY + 25);
+
+    // Tabla de productos
+    const productsY = order.trackingNumber ? infoY + 32 : infoY + 26;
+    const productData = order.products?.map(product => [
+      product.name,
+      product.quantity.toString(),
+      `$${product.price.toFixed(2)}`,
+      `$${(product.price * product.quantity).toFixed(2)}`
+    ]) || [];
+
+    autoTable(doc, {
+      startY: productsY,
+      head: [['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal']],
+      body: productData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [184, 134, 11],
+        textColor: [255, 255, 255],
+        fontSize: 10,
+        fontStyle: 'bold'
+      },
+      bodyStyles: {
+        fontSize: 9
+      },
+      columnStyles: {
+        0: { cellWidth: 90 },
+        1: { cellWidth: 30, halign: 'center' },
+        2: { cellWidth: 35, halign: 'right' },
+        3: { cellWidth: 35, halign: 'right' }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    // Total
+    const finalY = (doc as any).lastAutoTable.finalY || productsY + 50;
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text('TOTAL:', 140, finalY + 10);
+    doc.setFontSize(14);
+    doc.setTextColor(184, 134, 11);
+    doc.text(`$${order.total.toFixed(2)}`, 175, finalY + 10);
+
+    // Pie de página
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text('Gracias por su compra - Rondal Clothes', 105, 280, { align: 'center' });
+
+    doc.save(`orden_${order.id}_${new Date().getTime()}.pdf`);
+  };
+
   const handleViewDetails = (order: Order) => {
     setSelectedOrder(order);
     setShowModal(true);
@@ -217,11 +382,20 @@ export default function OrdersView() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-3xl bg-gradient-to-r from-[#b8860b] to-[#daa520] bg-clip-text text-transparent">
-          Gestión de Órdenes
-        </h2>
-        <p className="text-gray-600">Administra y rastrea todas las órdenes</p>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <h2 className="text-3xl bg-gradient-to-r from-[#b8860b] to-[#daa520] bg-clip-text text-transparent">
+            Gestión de Órdenes
+          </h2>
+          <p className="text-gray-600">Administra y rastrea todas las órdenes</p>
+        </div>
+        <button
+          onClick={handleExportAllOrders}
+          className="flex items-center gap-2 px-4 py-2 border border-[#daa520] text-[#daa520] rounded-lg hover:bg-[#daa520] hover:text-white transition-colors"
+        >
+          <FileText size={18} />
+          Exportar PDF
+        </button>
       </div>
 
       {/* Summary Cards */}
@@ -494,9 +668,11 @@ export default function OrdersView() {
                   Cerrar
                 </button>
                 <button
-                  className="flex-1 bg-gradient-to-r from-[#b8860b] to-[#daa520] text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all"
+                  onClick={() => handleExportOrderDetail(selectedOrder)}
+                  className="flex-1 bg-gradient-to-r from-[#b8860b] to-[#daa520] text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
                 >
-                  Imprimir Orden
+                  <Download size={18} />
+                  Exportar PDF
                 </button>
               </div>
             </div>

@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useProducts } from '../contexts/ProductContext';
 import { ShoppingBag, Lock, CheckCircle } from 'lucide-react';
 
-type PaymentMethod = 'transfer' | 'cash' | 'card';
+type PaymentMethod = 'transfer' | 'cash' | 'card' | 'paypal';
 
 export default function Checkout() {
   const { cart, getCartTotals, clearCart } = useCart();
@@ -36,6 +36,9 @@ export default function Checkout() {
     paymentMethod: PaymentMethod;
   } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showCardSimulation, setShowCardSimulation] = useState(false);
+  const [showPayPalSimulation, setShowPayPalSimulation] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const totals = useMemo(() => getCartTotals(), [cart]);
   const shipping = 0;
@@ -90,6 +93,21 @@ export default function Checkout() {
     e.preventDefault();
     if (!validateForm()) return;
 
+    // Si es tarjeta o PayPal, mostrar simulación de pago primero
+    if (paymentMethod === 'card') {
+      setShowCardSimulation(true);
+      return;
+    }
+    if (paymentMethod === 'paypal') {
+      setShowPayPalSimulation(true);
+      return;
+    }
+
+    // Para otros métodos de pago, procesar directamente
+    processOrder();
+  };
+
+  const processOrder = () => {
     const orderNumber = `RC-${Date.now().toString().slice(-8)}`;
     const itemsCount = cart.reduce((count, item) => count + item.quantity, 0);
     const lines = cart.map((item) => {
@@ -125,6 +143,26 @@ export default function Checkout() {
     clearCart();
     setSuccessModalData({ orderNumber, total: totalWithShipping, items: itemsCount, paymentMethod });
     setShowSuccessModal(true);
+  };
+
+  const handleCardPayment = () => {
+    setIsProcessingPayment(true);
+    // Simular procesamiento de pago con tarjeta (2 segundos)
+    setTimeout(() => {
+      setIsProcessingPayment(false);
+      setShowCardSimulation(false);
+      processOrder();
+    }, 2000);
+  };
+
+  const handlePayPalPayment = () => {
+    setIsProcessingPayment(true);
+    // Simular procesamiento de pago con PayPal (2 segundos)
+    setTimeout(() => {
+      setIsProcessingPayment(false);
+      setShowPayPalSimulation(false);
+      processOrder();
+    }, 2000);
   };
 
   const closeSuccessModal = () => {
@@ -321,7 +359,7 @@ export default function Checkout() {
                 <p className="text-sm text-gray-600">
                   Elige tu forma de pago preferida. Para transferencia o pago contra entrega, contáctanos por WhatsApp para coordinar.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('transfer')}
@@ -332,7 +370,7 @@ export default function Checkout() {
                     }`}
                   >
                     <p className="font-semibold">Transferencia</p>
-                    <p className="text-xs text-gray-500">Te mostramos los datos bancarios al confirmar.</p>
+                    <p className="text-xs text-gray-500">Datos bancarios al confirmar.</p>
                   </button>
                   <button
                     type="button"
@@ -343,8 +381,8 @@ export default function Checkout() {
                         : 'border-gray-200 text-gray-700 hover:border-[#daa520]'
                     }`}
                   >
-                    <p className="font-semibold">Pago contra entrega</p>
-                    <p className="text-xs text-gray-500">Cancela al recibir tu paquete.</p>
+                    <p className="font-semibold">Contra entrega</p>
+                    <p className="text-xs text-gray-500">Paga al recibir.</p>
                   </button>
                   <button
                     type="button"
@@ -355,8 +393,31 @@ export default function Checkout() {
                         : 'border-gray-200 text-gray-700 hover:border-[#daa520]'
                     }`}
                   >
-                    <p className="font-semibold">Tarjeta (simulado)</p>
-                    <p className="text-xs text-gray-500">Capturamos datos pero no cobramos en línea.</p>
+                    <p className="font-semibold flex items-center gap-1">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" fill="none" strokeWidth="2"/>
+                        <path d="M2 10h20" stroke="currentColor" strokeWidth="2"/>
+                      </svg>
+                      Tarjeta
+                    </p>
+                    <p className="text-xs text-gray-500">Simulación de pago.</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('paypal')}
+                    className={`rounded-lg border px-4 py-3 text-left transition ${
+                      paymentMethod === 'paypal'
+                        ? 'border-[#0070ba] bg-[#e6f3ff] text-[#0070ba]'
+                        : 'border-gray-200 text-gray-700 hover:border-[#0070ba]'
+                    }`}
+                  >
+                    <p className="font-semibold flex items-center gap-1">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506L9.95 13.81a.641.641 0 0 1 .633-.74h2.19c2.352 0 4.524-.881 5.991-2.362.81-.818 1.45-1.761 1.898-2.79a9.722 9.722 0 0 0 .56-2.001z"/>
+                      </svg>
+                      PayPal
+                    </p>
+                    <p className="text-xs text-gray-500">Pago rápido y seguro.</p>
                   </button>
                 </div>
 
@@ -423,7 +484,18 @@ export default function Checkout() {
                     </div>
                   </div>
                 )}
-                {paymentMethod !== 'card' && (
+                {paymentMethod === 'paypal' && (
+                  <div className="rounded-lg border border-dashed border-[#0070ba] bg-[#e6f3ff] p-4 space-y-3">
+                    <p className="text-sm text-gray-700 flex items-center gap-2">
+                      <Lock size={16} className="text-[#0070ba]" />
+                      Al confirmar la compra, se abrirá una ventana de simulación de pago con PayPal.
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Esta es una simulación educativa. No se realizará ningún cargo real a tu cuenta.
+                    </p>
+                  </div>
+                )}
+                {(paymentMethod === 'transfer' || paymentMethod === 'cash') && (
                   <div className="rounded-lg border border-dashed border-[#daa520] bg-[#fff7e0] p-4 space-y-3">
                     <p className="text-sm text-gray-700">
                       Para coordinar {paymentMethod === 'transfer' ? 'la transferencia' : 'el pago contra entrega'}, contáctanos por WhatsApp.
@@ -536,7 +608,12 @@ export default function Checkout() {
                 {successModalData.items} {successModalData.items === 1 ? 'producto' : 'productos'} por ${successModalData.total.toFixed(2)}.
               </p>
               <p className="text-xs text-gray-500">
-                Forma de pago: {successModalData.paymentMethod === 'transfer' ? 'Transferencia' : successModalData.paymentMethod === 'cash' ? 'Pago contra entrega' : 'Tarjeta (simulado)'}
+                Forma de pago: {
+                  successModalData.paymentMethod === 'transfer' ? 'Transferencia' :
+                  successModalData.paymentMethod === 'cash' ? 'Pago contra entrega' :
+                  successModalData.paymentMethod === 'paypal' ? 'PayPal (simulado)' :
+                  'Tarjeta (simulado)'
+                }
               </p>
             </div>
             <div className="space-y-1 text-center">
@@ -566,6 +643,137 @@ export default function Checkout() {
                 Cerrar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Card Payment Simulation Modal */}
+      {showCardSimulation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl space-y-6">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-[#b8860b] to-[#daa520] flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="2" y="5" width="20" height="14" rx="2" strokeWidth="2"/>
+                  <path d="M2 10h20" strokeWidth="2"/>
+                  <circle cx="7" cy="15" r="1" fill="currentColor"/>
+                </svg>
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+                Simulación de Pago con Tarjeta
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Procesando tu pago de forma segura
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Tarjeta:</span>
+                <span className="font-mono">**** **** **** {formData.cardNumber.slice(-4)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Titular:</span>
+                <span>{formData.cardName}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Monto a pagar:</span>
+                <span className="text-lg font-semibold bg-gradient-to-r from-[#b8860b] to-[#daa520] bg-clip-text text-transparent">
+                  ${totalWithShipping.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {isProcessingPayment ? (
+              <div className="text-center py-4">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#daa520]"></div>
+                <p className="text-sm text-gray-600 mt-4">Procesando pago...</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <button
+                  onClick={handleCardPayment}
+                  className="w-full bg-gradient-to-r from-[#b8860b] to-[#daa520] text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all font-semibold"
+                >
+                  Confirmar Pago
+                </button>
+                <button
+                  onClick={() => setShowCardSimulation(false)}
+                  className="w-full border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+
+            <p className="text-xs text-center text-gray-500">
+              Esta es una simulación educativa. No se realizará ningún cargo real.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* PayPal Payment Simulation Modal */}
+      {showPayPalSimulation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl space-y-6">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-[#0070ba] flex items-center justify-center mb-4">
+                <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506L9.95 13.81a.641.641 0 0 1 .633-.74h2.19c2.352 0 4.524-.881 5.991-2.362.81-.818 1.45-1.761 1.898-2.79a9.722 9.722 0 0 0 .56-2.001z"/>
+                </svg>
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+                Pagar con PayPal
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                La forma más rápida y segura de pagar
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                <div className="w-10 h-10 rounded-full bg-[#0070ba] flex items-center justify-center text-white font-semibold">
+                  {formData.email.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{formData.fullName}</p>
+                  <p className="text-xs text-gray-600">{formData.email}</p>
+                </div>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200">
+                <span className="text-sm text-gray-600">Monto a pagar:</span>
+                <span className="text-xl font-bold text-[#0070ba]">
+                  ${totalWithShipping.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {isProcessingPayment ? (
+              <div className="text-center py-4">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#0070ba]"></div>
+                <p className="text-sm text-gray-600 mt-4">Conectando con PayPal...</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <button
+                  onClick={handlePayPalPayment}
+                  className="w-full bg-[#0070ba] hover:bg-[#005ea6] text-white px-6 py-3 rounded-lg transition-all font-semibold"
+                >
+                  Continuar con PayPal
+                </button>
+                <button
+                  onClick={() => setShowPayPalSimulation(false)}
+                  className="w-full border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+
+            <p className="text-xs text-center text-gray-500">
+              Esta es una simulación educativa. No se realizará ningún cargo real a tu cuenta PayPal.
+            </p>
           </div>
         </div>
       )}

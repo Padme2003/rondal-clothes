@@ -1,18 +1,21 @@
 import { useState, useMemo } from 'react';
-import { 
-  Search, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  ShoppingBag, 
-  DollarSign, 
+import {
+  Search,
+  Mail,
+  Phone,
+  MapPin,
+  ShoppingBag,
+  DollarSign,
   Calendar,
   UserCheck,
   Filter,
   Download,
   Eye,
-  TrendingUp
+  TrendingUp,
+  FileText
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -225,18 +228,74 @@ export default function ClientsManager() {
   };
 
   const handleExportData = () => {
-    // Simular exportación de datos
-    const csvContent = 'ID,Nombre,Email,Órdenes,Total Gastado,Estado\n' +
-      filteredClients.map(c => 
-        `${c.id},${c.name},${c.email},${c.totalOrders},$${c.totalSpent},${c.status}`
-      ).join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'clientes_rondal_clothes.csv';
-    a.click();
+    const doc = new jsPDF();
+
+    // Título
+    doc.setFontSize(20);
+    doc.setTextColor(184, 134, 11); // Color dorado de la marca
+    doc.text('Rondal Clothes', 105, 15, { align: 'center' });
+
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Reporte de Clientes', 105, 25, { align: 'center' });
+
+    // Información de fecha y estadísticas
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    const fecha = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.text(`Generado: ${fecha}`, 14, 35);
+    doc.text(`Total de clientes: ${filteredClients.length}`, 14, 40);
+    doc.text(`Ingresos totales: $${filteredClients.reduce((sum, c) => sum + c.totalSpent, 0).toFixed(2)}`, 14, 45);
+
+    // Tabla de clientes
+    const tableData = filteredClients.map(client => [
+      client.id,
+      client.name,
+      client.email,
+      client.phone,
+      client.location,
+      client.totalOrders.toString(),
+      `$${client.totalSpent.toFixed(2)}`,
+      new Date(client.lastOrder).toLocaleDateString('es-ES'),
+      client.status === 'active' ? 'Activo' : 'Inactivo'
+    ]);
+
+    autoTable(doc, {
+      startY: 50,
+      head: [['ID', 'Nombre', 'Email', 'Teléfono', 'Ubicación', 'Órdenes', 'Total', 'Última Compra', 'Estado']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [184, 134, 11], // Color dorado
+        textColor: [255, 255, 255],
+        fontSize: 9,
+        fontStyle: 'bold'
+      },
+      bodyStyles: {
+        fontSize: 8
+      },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 15, halign: 'center' },
+        6: { cellWidth: 20, halign: 'right' },
+        7: { cellWidth: 22 },
+        8: { cellWidth: 18, halign: 'center' }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    // Guardar PDF
+    doc.save(`clientes_rondal_clothes_${new Date().getTime()}.pdf`);
   };
 
   return (
@@ -357,8 +416,8 @@ export default function ClientsManager() {
                 variant="outline"
                 className="border-[#daa520] text-[#daa520] hover:bg-[#daa520] hover:text-white"
               >
-                <Download size={16} className="mr-2" />
-                Exportar
+                <FileText size={16} className="mr-2" />
+                Exportar PDF
               </Button>
             </div>
           </div>
